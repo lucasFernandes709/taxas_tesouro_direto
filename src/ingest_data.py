@@ -2,6 +2,7 @@ import os
 import shutil
 import requests
 import boto3
+import logging
 from dotenv import load_dotenv, find_dotenv
 from io import BytesIO
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
@@ -16,6 +17,8 @@ def download_csv(url):
     """Download CSV file from a URL."""
     response = requests.get(url)
     response.raise_for_status()  # Check for HTTP request errors
+    logging.info('CSV file downloaded successfully.')
+
     return BytesIO(response.content)
 
 
@@ -24,15 +27,18 @@ def download_and_extract_zip(url, extract_to='./extracted_files/'):
 
     response = requests.get(url)
     response.raise_for_status()  # Check for HTTP request errors
+    logging.info('ZIP file file downloaded successfully.')
     zip_file = BytesIO(response.content)
 
     # Extract gzip file contents
+    logging.info(f'Extracting downloaded file to {extract_to} directory.')
     with ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(path=extract_to)
         extracted_files = zip_ref.namelist()
 
     # Get extracted files full path
     extracted_files = [os.path.join(extract_to, f) for f in extracted_files]
+    logging.info(f"File '{extracted_files[0]}' successfully extracted.")
 
     return extracted_files
 
@@ -41,8 +47,9 @@ def upload_to_s3(file_obj, bucket_name, object_name):
     """Upload file object to S3 bucket."""
     s3 = boto3.client('s3') # Credentials loaded from environment variables
     try:
+        logging.info(f"Uploading file '{object_name}' to s3 bucket '{bucket_name}'")
         s3.upload_fileobj(file_obj, bucket_name, object_name)
-        print(f"File uploaded successfully to bucket '{bucket_name}' with object name '{object_name}'.")
+        logging.info(f"'{object_name}' file uploaded successfully to s3 bucket '{bucket_name}'.")
     except NoCredentialsError:
         print("Credentials not available.")
     except PartialCredentialsError:
@@ -53,15 +60,18 @@ def upload_to_s3(file_obj, bucket_name, object_name):
 
 def main():
 
+    # Setup logging config
+    logging.basicConfig(filename='ingestion_log.log', level=logging.INFO)
+
     # Load environment variables
     load_dotenv(find_dotenv())
     S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
     # Download CSV file
-    CSV_URL = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv'
-    csv_obj = download_csv(CSV_URL)
+    CSV_URL = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv')
     csv_filename = get_filename(CSV_URL)
-
+    logging.info(f"Downloading csv file '{csv_filename}'...")
+    csv_obj = download_csv(CSV_URL)
     upload_to_s3(csv_obj, S3_BUCKET_NAME, f'{csv_filename}.csv')
 
     # Download ZIP file
@@ -83,6 +93,7 @@ def main():
         upload_to_s3(extracted_file, S3_BUCKET_NAME, f'{zip_filename}.csv')
 
     # Remove all extracted files
+    logging.info('Removing temporary extracted files')
     shutil.rmtree('./extracted_files/')
 
 
