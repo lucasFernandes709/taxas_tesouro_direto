@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "taxas-tesouro-direto"
+name = "tesouro_direto_transparente"
 version = "0.1.0"
 description = ""
 authors = ["Lucas Fernandes"]
