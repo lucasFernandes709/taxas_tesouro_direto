@@ -61,7 +61,7 @@ def upload_to_s3(file_obj, bucket_name, object_name):
 def main():
 
     # Setup logging config
-    logging_format = '%(name)s:%(asctime)s:%(levelname)s:%(message)s'
+    logging_format = '%(name)s:%(asctime)s:[%(levelname)s]:%(message)s'
     logging.basicConfig(filename='log.log', level=logging.INFO, format=logging_format, datefmt='%Y-%m-%d %H:%M:%S')
 
     # Load environment variables
@@ -84,8 +84,9 @@ def main():
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/26e4fd5d-d46b-44f9-948c-3235be81a596/download/InvestidoresTesouroDireto2021.zip',
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/ea4d0f68-88ea-4bec-9b96-ea991273b0fd/download/InvestidoresTesouroDireto2022.zip',
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/7ae294e2-fc61-4764-add8-6001662b30eb/download/InvestidoresTesouroDireto2023.zip',
-        'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/85958d35-45a6-489e-b664-2a8287de0b24/download/InvestidoresTesouroDireto2024.zip'
-    ]
+        'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/85958d35-45a6-489e-b664-2a8287de0b24/download/InvestidoresTesouroDireto2024.zip',
+        'https://www.tesourotransparente.gov.br/ckan/dataset/78739a33-4d2f-4e35-88fd-65f1ccbe81c4/resource/745a5e1f-d07a-45bb-b0cb-4d4e7fc685bd/download/OperacoesTesouroDireto.zip'
+        ]
 
     for zip_url in ZIP_URLS:
 
