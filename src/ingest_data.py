@@ -27,7 +27,7 @@ def download_and_extract_zip(url, extract_to='./extracted_files/'):
 
     response = requests.get(url)
     response.raise_for_status()  # Check for HTTP request errors
-    logging.info('ZIP file file downloaded successfully.')
+    logging.info('ZIP file downloaded successfully.')
     zip_file = BytesIO(response.content)
 
     # Extract gzip file contents
@@ -51,17 +51,18 @@ def upload_to_s3(file_obj, bucket_name, object_name):
         s3.upload_fileobj(file_obj, bucket_name, object_name)
         logging.info(f"'{object_name}' file uploaded successfully to s3 bucket '{bucket_name}'.")
     except NoCredentialsError:
-        print("Credentials not available.")
+        logging.exception("Credentials not available.")
     except PartialCredentialsError:
-        print("Incomplete credentials provided.")
+        logging.exception("Incomplete credentials provided.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.exception(f"An error occurred: {e}")
 
 
 def main():
 
     # Setup logging config
-    logging.basicConfig(filename='ingestion_log.log', level=logging.INFO)
+    logging_format = '%(name)s:%(asctime)s:%(levelname)s:%(message)s'
+    logging.basicConfig(filename='log.log', level=logging.INFO, format=logging_format, datefmt='%Y-%m-%d %H:%M:%S')
 
     # Load environment variables
     load_dotenv(find_dotenv())
