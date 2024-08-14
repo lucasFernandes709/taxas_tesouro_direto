@@ -68,7 +68,7 @@ def main():
     S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
     # Download CSV file
-    CSV_URL = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv')
+    CSV_URL = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv'
     csv_filename = get_filename(CSV_URL)
     logging.info(f"Downloading csv file '{csv_filename}'...")
     csv_obj = download_csv(CSV_URL)
@@ -90,7 +90,8 @@ def main():
 
         zip_filename = get_filename(zip_url)
         extracted_file = download_and_extract_zip(zip_url)[0]
-        upload_to_s3(extracted_file, S3_BUCKET_NAME, f'{zip_filename}.csv')
+        with open(extracted_file, 'rb') as data:
+            upload_to_s3(data, S3_BUCKET_NAME, f'{zip_filename}.csv')
 
     # Remove all extracted files
     logging.info('Removing temporary extracted files')
