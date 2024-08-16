@@ -28,8 +28,22 @@ Execute o script de ingestão dos dados, `src/ingest_data.py` e aguarde o proces
 
 ### Consolidação e ETL dos dados no ambiente AWS
 
+Os notebooks `src\etl_raw_data_compilation.ipynb` e `src\etl_data_specialization.ipynb` devem ser executados.
+No ambiente AWS, pode-se optar pelo **AWS Glue** ou **EMR** para configurar e executar os códigos.
+
+Uma vez que os dados especializados estiverem salvos nas camadas mais refinadas do S3 (silver/gold), pode-se utilizar um cliente SQL (como o **AWS Athena**) para realizar consultas e conectar-se com *data warehouses* e ferramentas de visualização e reporte (como o **Quicksight**).
+
+Para facilitar a criação e manutenção dos catálogos, schemas e tabelas necessários no Athena, os **Crawlers** e **Catálogos** do Glue são ferramentas bastante úteis.
 
 ## Pré-requisitos
 
 - **Python**: Este projeto requer Python 3.7 ou superior.
 - **Conta AWS**: É necessário ter uma conta AWS para acessar os serviços S3.
+
+## Contribuições
+
+Contribuições são sempre bem-vindas! Para contribuir com esse projeto, faça um fork, modifique e crie um pull request.
+
+## Licença
+
+MIT License (MIT)
