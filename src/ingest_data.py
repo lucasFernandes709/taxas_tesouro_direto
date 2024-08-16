@@ -32,6 +32,7 @@ def download_and_extract_zip(url, extract_to='./extracted_files/'):
 
     # Extract gzip file contents
     logging.info(f'Extracting downloaded file to {extract_to} directory.')
+
     with ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(path=extract_to)
         extracted_files = zip_ref.namelist()
@@ -87,11 +88,12 @@ def main():
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/85958d35-45a6-489e-b664-2a8287de0b24/download/InvestidoresTesouroDireto2024.zip',
         'https://www.tesourotransparente.gov.br/ckan/dataset/78739a33-4d2f-4e35-88fd-65f1ccbe81c4/resource/745a5e1f-d07a-45bb-b0cb-4d4e7fc685bd/download/OperacoesTesouroDireto.zip'
         ]
-
+    
     for zip_url in ZIP_URLS:
 
         zip_filename = get_filename(zip_url)
         extracted_file = download_and_extract_zip(zip_url)[0]
+
         with open(extracted_file, 'rb') as data:
             upload_to_s3(data, S3_BUCKET_NAME, f'{zip_filename}.csv')
 
