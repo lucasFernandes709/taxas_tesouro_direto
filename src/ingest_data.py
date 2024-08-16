@@ -2,6 +2,7 @@ import os
 import shutil
 import requests
 import boto3
+import logging
 from dotenv import load_dotenv, find_dotenv
 from io import BytesIO
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
@@ -16,6 +17,8 @@ def download_csv(url):
     """Download CSV file from a URL."""
     response = requests.get(url)
     response.raise_for_status()  # Check for HTTP request errors
+    logging.info('CSV file downloaded successfully.')
+
     return BytesIO(response.content)
 
 
@@ -24,15 +27,19 @@ def download_and_extract_zip(url, extract_to='./extracted_files/'):
 
     response = requests.get(url)
     response.raise_for_status()  # Check for HTTP request errors
+    logging.info('ZIP file downloaded successfully.')
     zip_file = BytesIO(response.content)
 
     # Extract gzip file contents
+    logging.info(f'Extracting downloaded file to {extract_to} directory.')
+
     with ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(path=extract_to)
         extracted_files = zip_ref.namelist()
 
     # Get extracted files full path
     extracted_files = [os.path.join(extract_to, f) for f in extracted_files]
+    logging.info(f"File '{extracted_files[0]}' successfully extracted.")
 
     return extracted_files
 
@@ -41,17 +48,22 @@ def upload_to_s3(file_obj, bucket_name, object_name):
     """Upload file object to S3 bucket."""
     s3 = boto3.client('s3') # Credentials loaded from environment variables
     try:
+        logging.info(f"Uploading file '{object_name}' to s3 bucket '{bucket_name}'")
         s3.upload_fileobj(file_obj, bucket_name, object_name)
-        print(f"File uploaded successfully to bucket '{bucket_name}' with object name '{object_name}'.")
+        logging.info(f"'{object_name}' file uploaded successfully to s3 bucket '{bucket_name}'.")
     except NoCredentialsError:
-        print("Credentials not available.")
+        logging.exception("Credentials not available.")
     except PartialCredentialsError:
-        print("Incomplete credentials provided.")
+        logging.exception("Incomplete credentials provided.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.exception(f"An error occurred: {e}")
 
 
 def main():
+
+    # Setup logging config
+    logging_format = '%(name)s:%(asctime)s:[%(levelname)s]:%(message)s'
+    logging.basicConfig(filename='log.log', level=logging.INFO, format=logging_format, datefmt='%Y-%m-%d %H:%M:%S')
 
     # Load environment variables
     load_dotenv(find_dotenv())
@@ -59,9 +71,9 @@ def main():
 
     # Download CSV file
     CSV_URL = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv'
-    csv_obj = download_csv(CSV_URL)
     csv_filename = get_filename(CSV_URL)
-
+    logging.info(f"Downloading csv file '{csv_filename}'...")
+    csv_obj = download_csv(CSV_URL)
     upload_to_s3(csv_obj, S3_BUCKET_NAME, f'{csv_filename}.csv')
 
     # Download ZIP file
@@ -73,16 +85,20 @@ def main():
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/26e4fd5d-d46b-44f9-948c-3235be81a596/download/InvestidoresTesouroDireto2021.zip',
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/ea4d0f68-88ea-4bec-9b96-ea991273b0fd/download/InvestidoresTesouroDireto2022.zip',
         'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/7ae294e2-fc61-4764-add8-6001662b30eb/download/InvestidoresTesouroDireto2023.zip',
-        'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/85958d35-45a6-489e-b664-2a8287de0b24/download/InvestidoresTesouroDireto2024.zip'
-    ]
-
+        'https://www.tesourotransparente.gov.br/ckan/dataset/48a7fd9d-78e5-43cb-bcba-6e7dcaf2d741/resource/85958d35-45a6-489e-b664-2a8287de0b24/download/InvestidoresTesouroDireto2024.zip',
+        'https://www.tesourotransparente.gov.br/ckan/dataset/78739a33-4d2f-4e35-88fd-65f1ccbe81c4/resource/745a5e1f-d07a-45bb-b0cb-4d4e7fc685bd/download/OperacoesTesouroDireto.zip'
+        ]
+    
     for zip_url in ZIP_URLS:
 
         zip_filename = get_filename(zip_url)
         extracted_file = download_and_extract_zip(zip_url)[0]
-        upload_to_s3(extracted_file, S3_BUCKET_NAME, f'{zip_filename}.csv')
+
+        with open(extracted_file, 'rb') as data:
+            upload_to_s3(data, S3_BUCKET_NAME, f'{zip_filename}.csv')
 
     # Remove all extracted files
+    logging.info('Removing temporary extracted files')
     shutil.rmtree('./extracted_files/')
 
 
